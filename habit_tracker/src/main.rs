@@ -1,6 +1,7 @@
-use ::std::io::{self, Write};
-use:: std::fs;
-use::serde::{Deserialize, Serialize};
+use chrono::Local;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::io::{self, Write};
 
 #[derive(Serialize, Deserialize)]
 struct Habit {
@@ -13,7 +14,7 @@ fn main() {
     println!("Welcome to habit tracker!");
 
     loop {
-        print!("Type a command (add/list/quit): ");
+        print!("Type a command (add/list/done/quit): ");
         io::stdout().flush().expect("Failed to flush stdout");
 
         let mut command = String::new();
@@ -47,6 +48,26 @@ fn main() {
                 println!("Your habits: ");
                 for habit in &habits {
                     println!(" - {} ", habit.name)
+                }
+            }
+            "done" => {
+                print!("Which habit did you complete today?: ");
+                io::stdout().flush().expect("Failed to flish to stdout");
+
+                let mut name = String::new();
+                io::stdin()
+                    .read_line(&mut name)
+                    .expect("failed to read name");
+                let name = name.trim();
+
+                let today = Local::now().format("%y-%m-%d").to_string();
+
+                if let Some(habit) = habits.iter_mut().find(|h| h.name == name) {
+                    habit.dates_done.push(today.clone());
+                    save_habits(&habits);
+                    println!("Marked '{}' as done for '{}'", name, today);
+                } else {
+                    println!("Habit '{}' not found", name);
                 }
             }
             "quit" => {
