@@ -1,11 +1,14 @@
 use ::std::io::{self, Write};
+use:: std::fs;
+use::serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 struct Habit {
     name: String,
     dates_done: Vec<String>,
 }
 fn main() {
-    let mut habits: Vec<Habit> = Vec::new();
+    let mut habits: Vec<Habit> = load_habits();
 
     println!("Welcome to habit tracker!");
 
@@ -37,7 +40,8 @@ fn main() {
                 };
 
                 habits.push(new_habit);
-                println!("Habit added!")
+                save_habits(&habits);
+                println!("Habit added and saved!")
             }
             "list" => {
                 println!("Your habits: ");
@@ -51,5 +55,18 @@ fn main() {
             }
             _ => println!("Unidentified command, please try again."),
         }
+    }
+}
+
+fn save_habits(habits: &Vec<Habit>) {
+    let data = serde_json::to_string_pretty(habits).expect("Failed to serialize habits");
+    fs::write("habits.json", data).expect("Unable to write to file");
+}
+
+fn load_habits() -> Vec<Habit> {
+    let data = fs::read_to_string("habits.json");
+    match data {
+        Ok(content) => serde_json::from_str(&content).unwrap_or_else(|_| Vec::new()),
+        Err(_) => Vec::new(),
     }
 }
