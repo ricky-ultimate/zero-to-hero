@@ -1,5 +1,5 @@
 use std::fs;
-use crate::habit::Habit;
+use crate::models::Habit;
 
 
 pub fn load_habits()-> Vec<Habit> {

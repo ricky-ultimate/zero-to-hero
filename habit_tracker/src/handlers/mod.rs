@@ -1,0 +1,75 @@
+use crate::{
+    models::Habit,
+    services::{load_habits, save_habits},
+};
+use std::io::{self, Write};
+
+pub fn run_cli() {
+    let mut habits: Vec<Habit> = load_habits();
+
+    println!("Welcome to habit tracker!");
+
+    loop {
+        print!("Type a command (add/list/done/quit): ");
+        io::stdout().flush().expect("Failed to flush stdout");
+
+        let mut command = String::new();
+        io::stdin()
+            .read_line(&mut command)
+            .expect("failed to read commad!");
+
+        let command = command.trim();
+
+        match command {
+            "add" => add_habit(&mut habits),
+            "list" => list_habits(&habits),
+            "done" => mark_done(&mut habits),
+            "quit" => {
+                println!("You chose to exit the program");
+                break;
+            }
+            _ => println!("Unidentified command, please try again."),
+        }
+    }
+}
+
+fn add_habit(habits: &mut Vec<Habit>) {
+    print!("Enter habit name: ");
+    io::stdout().flush().expect("Failed to flush stdout");
+
+    let mut name = String::new();
+    io::stdin()
+        .read_line(&mut name)
+        .expect("failed to read name");
+    let name = name.trim().to_string();
+
+    let new_habit = Habit::new(name);
+    habits.push(new_habit);
+    save_habits(&habits);
+    println!("Habit added and saved!");
+}
+
+fn list_habits(habits: &Vec<Habit>) {
+    println!("Your habits: ");
+    for habit in habits {
+        habit.summary();
+    }
+}
+
+fn mark_done(habits: &mut Vec<Habit>) {
+    print!("Which habit did you complete today?: ");
+    io::stdout().flush().expect("Failed to flish to stdout");
+
+    let mut name = String::new();
+    io::stdin()
+        .read_line(&mut name)
+        .expect("failed to read name");
+    let name = name.trim();
+
+    if let Some(habit) = habits.iter_mut().find(|h| h.name == name) {
+        habit.mark_done();
+        save_habits(&habits);
+    } else {
+        println!("Habit '{}' not found", name);
+    }
+}
