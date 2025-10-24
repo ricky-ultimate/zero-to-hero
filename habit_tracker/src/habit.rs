@@ -3,8 +3,8 @@ use chrono::Local;
 
 #[derive(Serialize, Deserialize)]
 pub struct Habit {
-    name: String,
-    dates_done: Vec<String>,
+    pub name: String,
+    pub dates_done: Vec<String>,
 }
 
 impl Habit {
