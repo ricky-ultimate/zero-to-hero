@@ -1,13 +1,10 @@
-use chrono::Local;
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::io::{self, Write};
+mod habit;
+mod storage;
 
-#[derive(Serialize, Deserialize)]
-struct Habit {
-    name: String,
-    dates_done: Vec<String>,
-}
+use habit::Habit;
+use std::io::{self, Write};
+use storage::{load_habits, save_habits};
+
 fn main() {
     let mut habits: Vec<Habit> = load_habits();
 
@@ -35,11 +32,7 @@ fn main() {
                     .expect("failed to read name");
                 let name = name.trim().to_string();
 
-                let new_habit = Habit {
-                    name,
-                    dates_done: Vec::new(),
-                };
-
+                let new_habit = Habit::new(name);
                 habits.push(new_habit);
                 save_habits(&habits);
                 println!("Habit added and saved!")
@@ -47,7 +40,7 @@ fn main() {
             "list" => {
                 println!("Your habits: ");
                 for habit in &habits {
-                    println!(" - {} ", habit.name)
+                    habit.summary();
                 }
             }
             "done" => {
@@ -60,12 +53,9 @@ fn main() {
                     .expect("failed to read name");
                 let name = name.trim();
 
-                let today = Local::now().format("%y-%m-%d").to_string();
-
                 if let Some(habit) = habits.iter_mut().find(|h| h.name == name) {
-                    habit.dates_done.push(today.clone());
+                    habit.mark_done();
                     save_habits(&habits);
-                    println!("Marked '{}' as done for '{}'", name, today);
                 } else {
                     println!("Habit '{}' not found", name);
                 }
@@ -76,18 +66,5 @@ fn main() {
             }
             _ => println!("Unidentified command, please try again."),
         }
-    }
-}
-
-fn save_habits(habits: &Vec<Habit>) {
-    let data = serde_json::to_string_pretty(habits).expect("Failed to serialize habits");
-    fs::write("habits.json", data).expect("Unable to write to file");
-}
-
-fn load_habits() -> Vec<Habit> {
-    let data = fs::read_to_string("habits.json");
-    match data {
-        Ok(content) => serde_json::from_str(&content).unwrap_or_else(|_| Vec::new()),
-        Err(_) => Vec::new(),
     }
 }
