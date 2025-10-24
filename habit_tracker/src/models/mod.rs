@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::Local;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Habit {
@@ -15,10 +15,16 @@ impl Habit {
         }
     }
 
-    pub fn mark_done(&mut self) {
+    pub fn mark_done(&mut self) -> String {
         let today = Local::now().format("%y-%m-%d").to_string();
-        self.dates_done.push(today.clone());
-        println!("Marked '{}' as done for '{}'", self.name, today)
+        if !self.dates_done.contains(&today) {
+            self.dates_done.push(today.clone());
+            println!("Marked '{}' as done for '{}'", self.name, today)
+        } else {
+            println!("'{}' was already marked done for '{}'", self.name, today);
+        }
+
+        today
     }
 
     pub fn summary(&self) {
