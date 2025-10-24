@@ -1,6 +1,6 @@
 use crate::{
     models::Habit,
-    services::{load_habits, save_habits},
+    services::storage::{load_habits, save_habits},
 };
 use std::io::{self, Write};
 
