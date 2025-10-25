@@ -3,25 +3,50 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-pub fn read_file<P: AsRef<Path>>(path: P) -> Result<String, io::Error> {
-    fs::read_to_string(path)
+#[derive(Debug)]
+pub enum ConfigError {
+    Io(io::Error),
+    Parse(String),
 }
 
-pub fn parse_env(content: &str) -> HashMap<String, String> {
+pub fn read_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
+    fs::read_to_string(path).map_err(ConfigError::Io)
+}
+
+pub fn parse_env(content: &str) -> Result<HashMap<String, String>, ConfigError> {
     let mut config = HashMap::new();
 
-    for line in content.lines() {
+    for (line_no, line) in content.lines().enumerate() {
         let line = line.trim();
 
         if line.is_empty() || line.starts_with("#") {
             continue;
         }
 
-        if let Some((key, value)) = line.split_once("=") {
-            config.insert(key.trim().to_string(), value.trim().to_string());
-        } else {
-            println!("Warning: Invalid line '{}'", line);
+        match line.split_once("=") {
+            Some((key, value)) => {
+                let key = key.trim().to_string();
+                let value = value.trim().to_string();
+
+                if config.contains_key(&key) {
+                    println!(
+                        "Warning: duplicate key '{}' found (line {})",
+                        key,
+                        line_no + 1
+                    );
+                }
+
+                config.insert(key, value);
+            }
+
+            None => {
+                return Err(ConfigError::Parse(format!(
+                    "Invalid line {}: '{}'",
+                    line_no + 1,
+                    line
+                )));
+            }
         }
     }
-    config
+    Ok(config)
 }
