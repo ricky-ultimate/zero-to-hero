@@ -3,14 +3,59 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+use serde::Deserialize;
+
 #[derive(Debug)]
 pub enum ConfigError {
     Io(io::Error),
     Parse(String),
+    Toml(toml::de::Error),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DatabaseConfig {
+    url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    port: Option<u16>,
+    debug: Option<bool>,
+    database: Option<DatabaseConfig>,
 }
 
 pub fn read_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
     fs::read_to_string(path).map_err(ConfigError::Io)
+}
+
+pub fn load_config<P: AsRef<Path>>(path: P) -> Result<Config, ConfigError> {
+    let path = path.as_ref();
+
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("toml") => {
+            let content = fs::read_to_string(path).map_err(ConfigError::Io)?;
+            let structured: Config = toml::from_str(&content).map_err(ConfigError::Toml)?;
+            Ok(structured)
+        }
+
+        Some("env") => {
+            let content = fs::read_to_string(path).map_err(ConfigError::Io)?;
+            let env_map = parse_env(&content)?;
+
+            Ok(Config {
+                port: env_map.get("PORT").and_then(|p| p.parse().ok()),
+                debug: env_map.get("DEBUG").and_then(|d| d.parse().ok()),
+                database: env_map
+                    .get("URL")
+                    .map(|url| DatabaseConfig { url: url.clone() }),
+            })
+        }
+
+        None | _  => Err(ConfigError::Parse(format!(
+            "unsupported config format: {:?}",
+            path
+        ))),
+    }
 }
 
 pub fn parse_env(content: &str) -> Result<HashMap<String, String>, ConfigError> {
