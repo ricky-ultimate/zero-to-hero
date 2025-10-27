@@ -14,14 +14,14 @@ pub enum ConfigError {
 
 #[derive(Debug, Deserialize)]
 pub struct DatabaseConfig {
-    url: String,
+    pub url: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    port: Option<u16>,
-    debug: Option<bool>,
-    database: Option<DatabaseConfig>,
+    pub port: Option<u16>,
+    pub debug: Option<bool>,
+    pub database: Option<DatabaseConfig>,
 }
 
 pub fn load_config<P: AsRef<Path>>(path: P) -> Result<Config, ConfigError> {
