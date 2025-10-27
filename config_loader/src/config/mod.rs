@@ -24,10 +24,6 @@ pub struct Config {
     database: Option<DatabaseConfig>,
 }
 
-pub fn read_file<P: AsRef<Path>>(path: P) -> Result<String, ConfigError> {
-    fs::read_to_string(path).map_err(ConfigError::Io)
-}
-
 pub fn load_config<P: AsRef<Path>>(path: P) -> Result<Config, ConfigError> {
     let path = path.as_ref();
 
