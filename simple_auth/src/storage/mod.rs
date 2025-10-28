@@ -1,7 +1,7 @@
 use crate::models::user::User;
 use serde_json;
 use std::fs;
-use std::io::{self, Write};
+use std::io;
 
 const USER_FILES: &str = "users.json";
 
