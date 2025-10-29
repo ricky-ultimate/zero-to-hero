@@ -12,7 +12,7 @@ pub fn load_users() -> Vec<User> {
     }
 }
 
-pub fn save_users(users: Vec<User>) -> io::Result<()> {
+pub fn save_users(users: &Vec<User>) -> io::Result<()> {
     match serde_json::to_string(&users) {
         Ok(json) => fs::write(USERS_FILE, json),
         Err(e) => {
